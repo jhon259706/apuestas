@@ -24,7 +24,7 @@ contract Bets {
         BetState state;
     }
 
-    uint256 latestBetId;
+    uint8 public latestBetId;
 
     mapping(uint8 => Bet) public betsMap;
     address public owner;
@@ -39,8 +39,8 @@ contract Bets {
         address validator,
         string memory description,
         uint256 amount
-    ) public {
-        uint8 newBetId = uint8(latestBetId + 1);
+    ) public returns (uint8) {
+        uint8 newBetId = latestBetId + 1;
         Bet memory betAdd = Bet({
             betId: newBetId,
             players: players,
@@ -53,5 +53,6 @@ contract Bets {
         });
         betsMap[newBetId] = betAdd;
         latestBetId = newBetId;
+        return latestBetId;
     }
 }
