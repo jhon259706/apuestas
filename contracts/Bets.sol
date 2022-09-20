@@ -8,9 +8,9 @@ contract Bets {
         CREATED,
         VERIFIED,
         PAID,
-        ACTIVE,        
+        ACTIVE,
         FINISHED,
-        CANCELED               
+        CANCELED
     }
 
     struct Bet {
@@ -35,21 +35,23 @@ contract Bets {
     }
 
     function add(
-        address[] players,
+        address[] memory players,
         address validator,
-        string description,
+        string memory description,
         uint256 amount
     ) public {
-        uint newBetId= latestBetId + 1;
-        betAdd = Bet({
+        uint8 newBetId = uint8(latestBetId + 1);
+        Bet memory betAdd = Bet({
             betId: newBetId,
             players: players,
             validator: validator,
-            description: description,
+            owner: msg.sender,
             amount: amount,
-            owner:msg.sender
+            description: description,
+            winner: address(0),
+            state: BetState.CREATED
         });
         betsMap[newBetId] = betAdd;
-        latestBetId=newBetId;
+        latestBetId = newBetId;
     }
 }
