@@ -34,10 +34,12 @@ contract Bets {
         latestBetId = 0;
     }
 
+    event BetAdded(uint betId, string message);
+
     function add(
-        address[] memory players,
+        address[] calldata players,
         address validator,
-        string memory description,
+        string calldata description,
         uint256 amount
     ) public returns (uint8) {
         uint8 newBetId = latestBetId + 1;
@@ -53,7 +55,7 @@ contract Bets {
         });
         betsMap[newBetId] = betAdd;
         latestBetId = newBetId;
-        return latestBetId;
+        emit BetAdded(latestBetId, 'Bet added successfully');
     }
 
     function getPlayers(uint8 betId)

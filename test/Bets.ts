@@ -25,34 +25,20 @@ describe("Bets", function () {
     });
   });
 
-  describe("Add bets", function () {
+  describe("Add bets", async () => {
     it("Should add a bet to the mapping list", async function () {
-      const { bets, player1, player2, validator } = await loadFixture(deployBetsContract);
+      const { bets, player1, player2, validator } = await loadFixture(
+        deployBetsContract
+      );
 
-      await bets.add(
+      const tx = await bets.add(
         [player1.address, player2.address],
         validator.address,
-        'Pepe apuesta 2000 a que gana el barcelona el siguiente partido',
+        "Pepe apuesta 2000 a que gana el barcelona el siguiente partido",
         200
       );
 
-      expect(await bets.latestBetId()).to.equal(1);
-    });
-
-    it("Should get players", async function () {
-      const { bets, player1, player2, validator } = await loadFixture(deployBetsContract);
-
-      await bets.add(
-        [player1.address, player2.address],
-        validator.address,
-        'Pepe apuesta 2000 a que gana el barcelona el siguiente partido',
-        200
-      );
-
-      const players = await bets.getPlayers(1);
-      console.log(players);
-
-      expect(await bets.latestBetId()).to.equal(1);
+      expect(tx).to.emit(bets, "BetAdded").withArgs(1, "Bet Added Succesfully");
     });
   });
 });
