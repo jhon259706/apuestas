@@ -29,13 +29,29 @@ describe("Bets", function () {
     it("Should add a bet to the mapping list", async function () {
       const { bets, player1, player2, validator } = await loadFixture(deployBetsContract);
 
-      const response = await bets.add(
+      await bets.add(
         [player1.address, player2.address],
         validator.address,
-        'hola mundo',
+        'Pepe apuesta 2000 a que gana el barcelona el siguiente partido',
         200
       );
-      console.log(await (await bets.betsMap(1)));
+
+      expect(await bets.latestBetId()).to.equal(1);
+    });
+
+    it("Should get players", async function () {
+      const { bets, player1, player2, validator } = await loadFixture(deployBetsContract);
+
+      await bets.add(
+        [player1.address, player2.address],
+        validator.address,
+        'Pepe apuesta 2000 a que gana el barcelona el siguiente partido',
+        200
+      );
+
+      const players = await bets.getPlayers(1);
+      console.log(players);
+
       expect(await bets.latestBetId()).to.equal(1);
     });
   });

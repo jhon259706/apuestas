@@ -55,4 +55,12 @@ contract Bets {
         latestBetId = newBetId;
         return latestBetId;
     }
+
+    function getPlayers(uint8 betId)
+        public
+        view
+        returns (address[] memory players)
+    {
+        return betsMap[betId].players;
+    }
 }
