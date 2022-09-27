@@ -6,7 +6,7 @@ import "hardhat/console.sol";
 contract Bets {
     enum BetState {
         CREATED,
-        VERIFIED,
+        VALIDATED,
         PAID,
         ACTIVE,
         FINISHED,
@@ -36,12 +36,17 @@ contract Bets {
 
     event BetAdded(uint betId, string message);
 
+    modifier onlyValidator(uint8 betId) {
+        require (msg.sender == betsMap[betId].validator, "You don't have permissions to validate this bet");
+        _;
+    }
+
     function add(
         address[] calldata players,
         address validator,
         string calldata description,
         uint256 amount
-    ) public returns (uint8) {
+    ) public {
         uint8 newBetId = latestBetId + 1;
         Bet memory betAdd = Bet({
             betId: newBetId,
@@ -56,6 +61,10 @@ contract Bets {
         betsMap[newBetId] = betAdd;
         latestBetId = newBetId;
         emit BetAdded(latestBetId, 'Bet added successfully');
+    }
+
+    function validateBet(uint8 betId) public onlyValidator(betId) {
+        betsMap[betId].state = BetState.VALIDATED;
     }
 
     function getPlayers(uint8 betId)

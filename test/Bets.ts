@@ -2,6 +2,9 @@ import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import type { Bets } from "../typechain-types/Bets";
+import type { ContractTransaction } from "@ethersproject/contracts/src.ts/index";
 
 describe("Bets", function () {
   // We define a fixture to reuse the same setup in every test.
@@ -17,7 +20,21 @@ describe("Bets", function () {
     return { owner, bets, player1, player2, validator };
   }
 
-  describe("Deployment", function () {
+  const addBet = (
+    bets: Bets,
+    player1: SignerWithAddress,
+    player2: SignerWithAddress,
+    validator: SignerWithAddress
+  ): Promise<ContractTransaction> => {
+    return bets.add(
+      [player1.address, player2.address],
+      validator.address,
+      "Pepe apuesta 2000 a que gana el barcelona el siguiente partido",
+      200
+    );
+  };
+
+  describe("Deployment", () => {
     it("Should set the right owner", async function () {
       const { bets, owner } = await loadFixture(deployBetsContract);
 
@@ -31,14 +48,24 @@ describe("Bets", function () {
         deployBetsContract
       );
 
-      const tx = await bets.add(
-        [player1.address, player2.address],
-        validator.address,
-        "Pepe apuesta 2000 a que gana el barcelona el siguiente partido",
-        200
+      const tx = await addBet(bets, player1, player2, validator);
+      expect(tx).to.emit(bets, "BetAdded").withArgs(1, "Bet Added Succesfully");
+    });
+  });
+
+  describe("Update Bets", async () => {
+    it("Should validate a bet by given id", async function () {
+      const { bets, player1, player2, validator } = await loadFixture(
+        deployBetsContract
       );
 
-      expect(tx).to.emit(bets, "BetAdded").withArgs(1, "Bet Added Succesfully");
+      const addBetTx = await addBet(bets, player1, player2, validator);
+      const receipt = await addBetTx.wait();
+
+      const createdBetId = receipt.events?.[0].args?.betId;
+      await bets.connect(validator).validateBet(createdBetId);
+      const bet = await bets.betsMap(createdBetId);
+      expect(bet.state).to.equals(1);
     });
   });
 });
