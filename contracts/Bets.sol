@@ -34,10 +34,13 @@ contract Bets {
         latestBetId = 0;
     }
 
-    event BetAdded(uint betId, string message);
+    event BetAdded(uint8 betId, string message);
 
     modifier onlyValidator(uint8 betId) {
-        require (msg.sender == betsMap[betId].validator, "You don't have permissions to validate this bet");
+        require(
+            msg.sender == betsMap[betId].validator,
+            "You don't have permissions to validate this bet"
+        );
         _;
     }
 
@@ -60,7 +63,7 @@ contract Bets {
         });
         betsMap[newBetId] = betAdd;
         latestBetId = newBetId;
-        emit BetAdded(latestBetId, 'Bet added successfully');
+        emit BetAdded(latestBetId, "Bet added successfully");
     }
 
     function validateBet(uint8 betId) public onlyValidator(betId) {
