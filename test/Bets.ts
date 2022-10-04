@@ -63,9 +63,26 @@ describe("Bets", function () {
       const receipt = await addBetTx.wait();
 
       const createdBetId = receipt.events?.[0].args?.betId;
-      await bets.connect(validator).validateBet(createdBetId);
+      await bets.connect(validator).validate(createdBetId);
       const bet = await bets.betsMap(createdBetId);
       expect(bet.state).to.equals(1);
     });
+  });
+
+  describe("Get players", async () => {
+    it("Should return a single player", async function () {
+      const { bets, player1, player2, validator } = await loadFixture(
+        deployBetsContract
+      );
+
+      const addBetTx = await addBet(bets, player1, player2, validator);
+      const receipt = await addBetTx.wait();
+
+      const createdBetId = receipt.events?.[0].args?.betId;
+      expect((await bets.getPlayer(createdBetId, player1.address)).paidBet).to.equals(false);
+    });
+
+    // TODO Implement the getPlayers unit test and the failure in case of a wrong player address
+    // TODO Maybe refactor the unit testing to have less duplicated code
   });
 });

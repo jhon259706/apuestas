@@ -13,9 +13,14 @@ contract Bets {
         CANCELED
     }
 
+    struct Player {
+        address playerAddress;
+        bool paidBet;
+    }
+
     struct Bet {
         uint8 betId;
-        address[] players;
+        mapping(address => Player) players;
         address validator;
         address owner;
         uint256 amount;
@@ -51,30 +56,53 @@ contract Bets {
         uint256 amount
     ) public {
         uint8 newBetId = latestBetId + 1;
-        Bet memory betAdd = Bet({
-            betId: newBetId,
-            players: players,
-            validator: validator,
-            owner: msg.sender,
-            amount: amount,
-            description: description,
-            winner: address(0),
-            state: BetState.CREATED
-        });
-        betsMap[newBetId] = betAdd;
+
+        Bet storage bet = betsMap[newBetId];
+        bet.betId = newBetId;
+        bet.validator = validator;
+        bet.owner = msg.sender;
+        bet.amount = amount;
+        bet.description = description;
+        bet.winner = address(0);
+        bet.state = BetState.CREATED;
+
+        for (uint256 index = 0; index < players.length; index++) {
+            Player memory player = Player({
+                playerAddress: players[index],
+                paidBet: false
+            });
+            bet.players[players[index]] = player;
+        }
+
         latestBetId = newBetId;
         emit BetAdded(latestBetId, "Bet added successfully");
     }
 
-    function validateBet(uint8 betId) public onlyValidator(betId) {
+    function validate(uint8 betId) public onlyValidator(betId) {
         betsMap[betId].state = BetState.VALIDATED;
     }
 
-    function getPlayers(uint8 betId)
+    function pay(uint8 betId) public payable {}
+
+    function getPlayer(uint8 betId, address playerAddress)
         public
         view
-        returns (address[] memory players)
+        returns (Player memory player)
     {
-        return betsMap[betId].players;
+        player = betsMap[betId].players[playerAddress];
+        require(
+            player.playerAddress != address(0),
+            "This player is not part of this bet"
+        );
+        return player;
     }
+
+    // TODO Fix the getPlayers method to return an array instead of a mapping
+    // function getPlayers(uint8 betId)
+    //     public
+    //     view
+    //     returns (address[] memory players)
+    // {
+    //     return betsMap[betId].players;
+    // }
 }
