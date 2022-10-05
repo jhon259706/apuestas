@@ -20,7 +20,7 @@ contract Bets {
 
     struct Bet {
         uint8 betId;
-        mapping(address => Player) players;
+        Player[] players;
         address validator;
         address owner;
         uint256 amount;
@@ -71,7 +71,8 @@ contract Bets {
                 playerAddress: players[index],
                 paidBet: false
             });
-            bet.players[players[index]] = player;
+
+            bet.players.push(player);
         }
 
         latestBetId = newBetId;
@@ -89,19 +90,27 @@ contract Bets {
         view
         returns (Player memory player)
     {
-        player = betsMap[betId].players[playerAddress];
+
+        Player[] memory players = betsMap[betId].players;
+
+        for (uint256 index = 0; index < players.length; index++) {
+            if (players[index].playerAddress == playerAddress) {
+                player = players[index];
+            }
+        }
+
         require(
             player.playerAddress != address(0),
             "This player is not part of this bet"
         );
+
         return player;
     }
 
-    // TODO Fix the getPlayers method to return an array instead of a mapping
     // function getPlayers(uint8 betId)
     //     public
     //     view
-    //     returns (address[] memory players)
+    //     returns (mapping(address => Player) memory players)
     // {
     //     return betsMap[betId].players;
     // }
