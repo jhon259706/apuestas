@@ -79,10 +79,21 @@ describe("Bets", function () {
       const receipt = await addBetTx.wait();
 
       const createdBetId = receipt.events?.[0].args?.betId;
-      expect((await bets.getPlayer(createdBetId, player1.address)).paidBet).to.equals(false);
+      expect((await bets.getPlayer(createdBetId, player1.address)).playerAddress).to.equals(player1.address);
     });
 
-    // TODO Implement the getPlayers unit test and the failure in case of a wrong player address
+    it("Should return all players in a bet", async function () {
+      const { bets, player1, player2, validator } = await loadFixture(
+        deployBetsContract
+      );
+
+      const addBetTx = await addBet(bets, player1, player2, validator);
+      const receipt = await addBetTx.wait();
+
+      const createdBetId = receipt.events?.[0].args?.betId;
+      expect((await bets.getPlayers(createdBetId))[0].playerAddress).to.equals(player1.address);
+    });
+    // TODO Define a better way to test arrays 
     // TODO Maybe refactor the unit testing to have less duplicated code
   });
 });

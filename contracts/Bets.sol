@@ -90,7 +90,6 @@ contract Bets {
         view
         returns (Player memory player)
     {
-
         Player[] memory players = betsMap[betId].players;
 
         for (uint256 index = 0; index < players.length; index++) {
@@ -107,11 +106,11 @@ contract Bets {
         return player;
     }
 
-    // function getPlayers(uint8 betId)
-    //     public
-    //     view
-    //     returns (mapping(address => Player) memory players)
-    // {
-    //     return betsMap[betId].players;
-    // }
+    function getPlayers(uint8 betId)
+        public
+        view
+        returns (Player[] memory players)
+    {
+        return betsMap[betId].players;
+    }
 }
