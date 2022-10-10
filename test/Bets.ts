@@ -20,18 +20,23 @@ describe("Bets", function () {
     return { owner, bets, player1, player2, validator };
   }
 
-  const addBet = (
+  const addBet = async (
     bets: Bets,
     player1: SignerWithAddress,
     player2: SignerWithAddress,
     validator: SignerWithAddress
-  ): Promise<ContractTransaction> => {
-    return bets.add(
+  ): Promise<{tx: ContractTransaction, createdBetId: any}> => {
+    const tx = await bets.add(
       [player1.address, player2.address],
       validator.address,
       "Pepe apuesta 2000 a que gana el barcelona el siguiente partido",
       200
     );
+
+    const receipt = await tx.wait();
+    const createdBetId = receipt.events?.[0].args?.betId;
+
+    return {tx, createdBetId}
   };
 
   describe("Deployment", () => {
@@ -48,7 +53,7 @@ describe("Bets", function () {
         deployBetsContract
       );
 
-      const tx = await addBet(bets, player1, player2, validator);
+      const {tx} = await addBet(bets, player1, player2, validator);
       expect(tx).to.emit(bets, "BetAdded").withArgs(1, "Bet Added Succesfully");
     });
   });
@@ -59,10 +64,8 @@ describe("Bets", function () {
         deployBetsContract
       );
 
-      const addBetTx = await addBet(bets, player1, player2, validator);
-      const receipt = await addBetTx.wait();
+      const {createdBetId} = await addBet(bets, player1, player2, validator);
 
-      const createdBetId = receipt.events?.[0].args?.betId;
       await bets.connect(validator).validate(createdBetId);
       const bet = await bets.betsMap(createdBetId);
       expect(bet.state).to.equals(1);
@@ -75,10 +78,8 @@ describe("Bets", function () {
         deployBetsContract
       );
 
-      const addBetTx = await addBet(bets, player1, player2, validator);
-      const receipt = await addBetTx.wait();
+      const {createdBetId} = await addBet(bets, player1, player2, validator);
 
-      const createdBetId = receipt.events?.[0].args?.betId;
       expect((await bets.getPlayer(createdBetId, player1.address)).playerAddress).to.equals(player1.address);
     });
 
@@ -87,13 +88,20 @@ describe("Bets", function () {
         deployBetsContract
       );
 
-      const addBetTx = await addBet(bets, player1, player2, validator);
-      const receipt = await addBetTx.wait();
+      const {createdBetId} = await addBet(bets, player1, player2, validator);
 
-      const createdBetId = receipt.events?.[0].args?.betId;
-      expect((await bets.getPlayers(createdBetId))[0].playerAddress).to.equals(player1.address);
+      const expectedResponse = [
+        [
+          player1.address,
+          false
+        ],
+        [
+          player2.address,
+          false
+        ]
+      ]
+
+      expect((JSON.parse(JSON.stringify(await bets.getPlayers(createdBetId))))).to.deep.equal(expectedResponse);
     });
-    // TODO Define a better way to test arrays 
-    // TODO Maybe refactor the unit testing to have less duplicated code
   });
 });
