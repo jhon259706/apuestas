@@ -49,6 +49,12 @@ contract Bets {
         _;
     }
 
+    modifier betExist(uint8 betId) {
+        Bet memory bet = betsMap[betId];
+        require(bet.betId == betId, "This bet does not exist");
+        _;
+    }
+
     function add(
         address[] calldata players,
         address validator,
@@ -79,15 +85,41 @@ contract Bets {
         emit BetAdded(latestBetId, "Bet added successfully");
     }
 
-    function validate(uint8 betId) public onlyValidator(betId) {
+    function validate(uint8 betId) public onlyValidator(betId) betExist(betId) {
         betsMap[betId].state = BetState.VALIDATED;
     }
 
-    function pay(uint8 betId) public payable {}
+
+    //to do 
+    // cómo reutilizar la función del player
+    // agregar testing a la función pay
+    // agregar lógica de las notificaciones cuando el último player pague
+    function pay(uint8 betId) public payable betExist(betId) {
+        Bet storage bet = betsMap[betId];
+        require(
+            msg.value == bet.amount,
+            "The amount transfered must match the bet amount"
+        );
+        address playerPaid = msg.sender;
+        bool found = false;
+        for (uint256 index = 0; index < bet.players.length; index++) {
+            Player storage playerItem = bet.players[index];
+            if (playerItem.playerAddress == playerPaid) {
+                found = true;
+                require(
+                    playerItem.paidBet == false,
+                    "The bet is already paid by this user"
+                );
+                playerItem.paidBet = true;
+            }
+        }
+        require(found, "The player does not belong to this bet");
+    }
 
     function getPlayer(uint8 betId, address playerAddress)
         public
         view
+        betExist(betId)
         returns (Player memory player)
     {
         Player[] memory players = betsMap[betId].players;
@@ -109,6 +141,7 @@ contract Bets {
     function getPlayers(uint8 betId)
         public
         view
+        betExist(betId)
         returns (Player[] memory players)
     {
         return betsMap[betId].players;
